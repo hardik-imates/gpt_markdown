@@ -43,8 +43,6 @@ class GptMarkdown extends StatelessWidget {
     this.components,
     this.inlineComponents,
     this.useDollarSignsForLatex = false,
-    this.returnTex,
-    this.updatedReturnTex,
   });
 
   /// The direction of the text.
@@ -101,9 +99,6 @@ class GptMarkdown extends StatelessWidget {
 
   /// Whether to use dollar signs for LaTeX.
   final bool useDollarSignsForLatex;
-
-  final Function(String tex)? returnTex;
-  final Function(String tex)? updatedReturnTex;
 
   /// The list of components.
   ///  ```dart
@@ -163,7 +158,6 @@ class GptMarkdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     String tex = data.trim();
-    returnTex?.call(tex);
     if (useDollarSignsForLatex) {
       tex = tex.replaceAllMapped(
         RegExp(r"(?<!\\)\$\$(.*?)(?<!\\)\$\$", dotAll: true),
@@ -182,7 +176,6 @@ class GptMarkdown extends StatelessWidget {
         );
       }
     }
-    updatedReturnTex?.call(tex);
     // tex = _removeExtraLinesInsideBlockLatex(tex);
     return ClipRRect(
       child: MdWidget(
