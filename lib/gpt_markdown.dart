@@ -165,6 +165,12 @@ class GptMarkdown extends StatelessWidget {
       (match) => '\$${match[1]}',
     );
 
+    // Also handle & symbol in table headers
+    tex = tex.replaceAllMapped(
+      RegExp(r'\\\&'),
+      (match) => '&',
+    );
+
     if (useDollarSignsForLatex) {
       // Then handle block LaTeX with $$ ... $$
       tex = tex.replaceAllMapped(
