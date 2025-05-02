@@ -43,6 +43,8 @@ class GptMarkdown extends StatelessWidget {
     this.components,
     this.inlineComponents,
     this.useDollarSignsForLatex = false,
+    this.returnTex,
+    this.updatedReturnTex,
   });
 
   /// The direction of the text.
@@ -99,6 +101,9 @@ class GptMarkdown extends StatelessWidget {
 
   /// Whether to use dollar signs for LaTeX.
   final bool useDollarSignsForLatex;
+
+  final Function(String tex)? returnTex;
+  final Function(String tex)? updatedReturnTex;
 
   /// The list of components.
   ///  ```dart
@@ -157,35 +162,28 @@ class GptMarkdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print("check -> check issue markdown_update");
     String tex = data.trim();
+    returnTex?.call(tex);
     if (useDollarSignsForLatex) {
-      // First preserve currency amounts for both ₹ and $ by temporarily replacing them
-      tex = tex.replaceAllMapped(
-        RegExp(r'(?<!\\)([₹\$])(\d[\d,.]*)'),
-        (match) => '###CURRENCY###${match[1]}###${match[2]}###',
-      );
-
-      // Then handle block LaTeX with $$ ... $$
       tex = tex.replaceAllMapped(
         RegExp(r"(?<!\\)\$\$(.*?)(?<!\\)\$\$", dotAll: true),
         (match) => "\\[${match[1] ?? ""}\\]",
       );
-
-      // Then handle inline LaTeX with $ ... $
       if (!tex.contains(r"\(")) {
         tex = tex.replaceAllMapped(
           RegExp(r"(?<!\\)\$(.*?)(?<!\\)\$"),
           (match) => "\\(${match[1] ?? ""}\\)",
         );
+        tex = tex.splitMapJoin(
+          RegExp(r"\[.*?\]|\(.*?\)"),
+          onNonMatch: (p0) {
+            return p0.replaceAll("\\\$", "\$");
+          },
+        );
       }
-
-      // Finally restore currency amounts with their original symbols
-      tex = tex.replaceAllMapped(
-        RegExp(r'###CURRENCY###([₹\$])###([\d,.]*)###'),
-        (match) => '${match[1]}${match[2]}',
-      );
     }
+    updatedReturnTex?.call(tex);
+    // tex = _removeExtraLinesInsideBlockLatex(tex);
     return ClipRRect(
       child: MdWidget(
         tex,
