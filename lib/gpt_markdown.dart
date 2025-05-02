@@ -159,26 +159,31 @@ class GptMarkdown extends StatelessWidget {
   Widget build(BuildContext context) {
     String tex = data.trim();
     if (useDollarSignsForLatex) {
-      // First handle block LaTeX with $$ ... $$
+      // First preserve currency amounts for both ₹ and $ by temporarily replacing them
+      tex = tex.replaceAllMapped(
+        RegExp(r'(?<!\\)([₹\$])(\d[\d,.]*)'),
+        (match) => '###CURRENCY###${match[1]}###${match[2]}###',
+      );
+
+      // Then handle block LaTeX with $$ ... $$
       tex = tex.replaceAllMapped(
         RegExp(r"(?<!\\)\$\$(.*?)(?<!\\)\$\$", dotAll: true),
         (match) => "\\[${match[1] ?? ""}\\]",
       );
 
-      // Then handle inline LaTeX with $ ... $ but ignore currency amounts
+      // Then handle inline LaTeX with $ ... $
       if (!tex.contains(r"\(")) {
-        // First clean up escaped dollar signs in currency amounts
         tex = tex.replaceAllMapped(
-          RegExp(r"\\\$(\d[\d,.]*)"),
-          (match) => "\$${match[1]}",
-        );
-
-        // Then handle LaTeX expressions
-        tex = tex.replaceAllMapped(
-          RegExp(r"(?<!\\)\$(?!\d)(.*?)(?<!\\)\$"),
+          RegExp(r"(?<!\\)\$(.*?)(?<!\\)\$"),
           (match) => "\\(${match[1] ?? ""}\\)",
         );
       }
+
+      // Finally restore currency amounts with their original symbols
+      tex = tex.replaceAllMapped(
+        RegExp(r'###CURRENCY###([₹\$])###([\d,.]*)###'),
+        (match) => '${match[1]}${match[2]}',
+      );
     }
     return ClipRRect(
       child: MdWidget(
