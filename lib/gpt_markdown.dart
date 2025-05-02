@@ -157,6 +157,7 @@ class GptMarkdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print("check -> check issue markdown_update");
     String tex = data.trim();
     if (useDollarSignsForLatex) {
       // First preserve currency amounts for both ₹ and $ by temporarily replacing them
