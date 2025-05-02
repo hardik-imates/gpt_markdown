@@ -167,17 +167,16 @@ class GptMarkdown extends StatelessWidget {
 
       // Then handle inline LaTeX with $ ... $ but ignore currency amounts
       if (!tex.contains(r"\(")) {
+        // First clean up escaped dollar signs in currency amounts
         tex = tex.replaceAllMapped(
-          RegExp(r"(?<!\$)(?<!\\)\$(?!\d)([^$]*?)(?<!\\)\$(?!\d)"),
-          (match) => "\\(${match[1] ?? ""}\\)",
+          RegExp(r"\\\$(\d[\d,.]*)"),
+          (match) => "\$${match[1]}",
         );
 
-        // Clean up any remaining escaped dollar signs that aren't part of currency
-        tex = tex.splitMapJoin(
-          RegExp(r"\[.*?\]|\(.*?\)"),
-          onNonMatch: (p0) {
-            return p0.replaceAll(r"\$(?!\d)", "\$");
-          },
+        // Then handle LaTeX expressions
+        tex = tex.replaceAllMapped(
+          RegExp(r"(?<!\\)\$(?!\d)(.*?)(?<!\\)\$"),
+          (match) => "\\(${match[1] ?? ""}\\)",
         );
       }
     }
