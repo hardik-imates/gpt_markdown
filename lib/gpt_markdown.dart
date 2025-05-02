@@ -159,24 +159,28 @@ class GptMarkdown extends StatelessWidget {
   Widget build(BuildContext context) {
     String tex = data.trim();
     if (useDollarSignsForLatex) {
+      // First handle block LaTeX with $$ ... $$
       tex = tex.replaceAllMapped(
         RegExp(r"(?<!\\)\$\$(.*?)(?<!\\)\$\$", dotAll: true),
         (match) => "\\[${match[1] ?? ""}\\]",
       );
+
+      // Then handle inline LaTeX with $ ... $ but ignore currency amounts
       if (!tex.contains(r"\(")) {
         tex = tex.replaceAllMapped(
-          RegExp(r"(?<!\\)\$(.*?)(?<!\\)\$"),
+          RegExp(r"(?<!\$)(?<!\\)\$(?!\d)([^$]*?)(?<!\\)\$(?!\d)"),
           (match) => "\\(${match[1] ?? ""}\\)",
         );
+
+        // Clean up any remaining escaped dollar signs that aren't part of currency
         tex = tex.splitMapJoin(
           RegExp(r"\[.*?\]|\(.*?\)"),
           onNonMatch: (p0) {
-            return p0.replaceAll("\\\$", "\$");
+            return p0.replaceAll(r"\$(?!\d)", "\$");
           },
         );
       }
     }
-    // tex = _removeExtraLinesInsideBlockLatex(tex);
     return ClipRRect(
       child: MdWidget(
         tex,
